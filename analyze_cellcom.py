@@ -179,10 +179,11 @@ def analyze_energy_data(input_file):
 # Example usage
 if __name__ == "__main__":
     if (len(sys.argv) < 2):
-        input_file = "in.csv"
+        input_file = "examples/cellcom.csv"
     else:
         input_file = sys.argv[1]
     
+    print(f"Analyzing {input_file}")
     try:
         period_data = analyze_energy_data(input_file)
     except Exception as e:

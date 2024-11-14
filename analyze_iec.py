@@ -1,4 +1,5 @@
 
+import sys
 import csv
 from datetime import datetime, time
 
@@ -67,9 +68,13 @@ def aggregate_consumption_by_parts_of_day(consumption_data):
     return daily_consumption
 
 if __name__ == "__main__":
-    # Example usage
-    file_path = "iec.csv"
-    consumption_data = process_consumption_csv(file_path)
+    if (len(sys.argv) < 2):
+        input_file = "examples/iec.csv"
+    else:
+        input_file = sys.argv[1]
+
+    print(f"Analyzing {input_file}")
+    consumption_data = process_consumption_csv(input_file)
     daily_aggregates = aggregate_consumption_by_parts_of_day(consumption_data)
     
     for day, parts in daily_aggregates.items():
