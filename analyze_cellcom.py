@@ -1,3 +1,4 @@
+import sys
 import csv
 from datetime import datetime, time
 from collections import defaultdict
@@ -13,18 +14,18 @@ def parse_date(date_string):
     datetime: Parsed datetime object
     """
     date_formats = [
+        '%Y-%m-%dT%H:%M:%S',         # 2024-08-01T12:00:00
         '%b %d, %Y %I:%M:%S %p',     # Aug 1, 2024 12:00:00 AM
         '%B %d, %Y %I:%M:%S %p',     # August 1, 2024 12:00:00 AM
         '%Y-%m-%d %H:%M:%S',         # 2024-08-01 12:00:00
         '%m/%d/%Y %H:%M:%S',         # 08/01/2024 12:00:00
         '%d/%m/%Y %H:%M:%S',         # 01/08/2024 12:00:00
-        '%Y-%m-%dT%H:%M:%S',         # 2024-08-01T12:00:00
         '%d-%m-%Y %H:%M:%S',         # 01-08-2024 12:00:00
     ]
     
     for date_format in date_formats:
         try:
-            return datetime.strptime(date_string, date_format)
+            return datetime.strptime(date_string.split('.')[0], date_format)
         except ValueError:
             continue
     
@@ -73,12 +74,11 @@ def analyze_energy_data(input_file):
         
         # Identify the relevant fields based on common names
         for field in reader.fieldnames:
-            field_lower = field.lower()
-            if 'date' in field_lower or 'time' in field_lower:
+            if 'תאריך' in field:
                 date_field = field
-            elif 'consum' in field_lower:
+            elif 'צריכה' in field:
                 consumption_field = field
-            elif 'product' in field_lower:
+            elif 'הזרמה' in field:
                 production_field = field
         
         if not all([date_field, consumption_field, production_field]):
@@ -88,6 +88,8 @@ def analyze_energy_data(input_file):
         
         # Keep track of statistics
         total_rows = 0
+        start_date = None
+        end_date = None
         duplicate_count = 0
         error_count = 0
         previous_dt = None
@@ -101,7 +103,12 @@ def analyze_energy_data(input_file):
             try:
                 # Parse the datetime
                 dt = parse_date(row[date_field])
-                
+
+                # keep track of statistics
+                if (not start_date):
+                    start_date = dt
+                end_date = dt
+
                 # Check if this is a duplicate (same timestamp as previous row)
                 if previous_dt == dt:
                     duplicate_count += 1
@@ -160,6 +167,8 @@ def analyze_energy_data(input_file):
     print("-" * 80)
     print(f"\nData summary:")
     print(f"- Total readings processed: {total_rows}")
+    print(f"- Readings start date: {start_date}")
+    print(f"- Readings end date: {end_date}")
     print(f"- Duplicate entries found: {duplicate_count}")
     print(f"- Errors encountered: {error_count}")
     print(f"- Unique days in dataset: {len(set(dt.date() for dt in fifteen_min_data.keys()))}")
@@ -169,7 +178,10 @@ def analyze_energy_data(input_file):
 
 # Example usage
 if __name__ == "__main__":
-    input_file = "in.csv"
+    if (len(sys.argv) < 2):
+        input_file = "in.csv"
+    else:
+        input_file = sys.argv[1]
     
     try:
         period_data = analyze_energy_data(input_file)
