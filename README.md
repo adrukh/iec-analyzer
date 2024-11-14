@@ -8,15 +8,29 @@ Israel is moving from old electricity power meters to new ones, which support ne
 The aim of this repo is to collaborate on tools that analyze the available power consumption data, and suggest the right discount plan for a household. It is currently available for households that have a new power meter installed, and are serviced by IEC or any other commercial utility provider.
 
 ## Usage
-First, download your household power consumption data from IEC at https://iec.co.il/consumption-info-menu/remote-reading-info.
-
-```
+Start by cloning this repo. You will need python3 installed.
+```sh
 git clone https://github.com/adrukh/iec-analyzer.git
 cd iec-analyzer
-cp ~/Downloads/<IEC data file> iec.csv
-python3 analyze_iec.py
+```
+
+### IEC
+IEC allow online access to power consumption data. Download it at https://iec.co.il/consumption-info-menu/remote-reading-info. This will be a CSV file with a funny name.
+
+Then run
+```sh
+python3 analyze_iec.py path/to/your-iec-file.csv
+```
+
+### Cellcom
+Cellcom do not provide their data online yet. You need to call them (*2266 or 0732989184) and ask for your data for a specific timeframe. Ask for as much as they have, and they will email you an XLSX file. [Find a way](https://csvkit.readthedocs.io/) to save it in CSV format.
+
+Then run
+```sh
+python3 analyze_cellcom.py path/to/your-cellcom-file.csv
 ```
 
 ## Contribute
 Please feel free to suggest ideas (PRs are welcome) for more things this analysis can do!
+
 Support for the different data formats of the various utility providers will also be appreciated.
