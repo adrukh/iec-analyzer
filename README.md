@@ -14,10 +14,30 @@ git clone https://github.com/adrukh/iec-analyzer.git
 cd iec-analyzer
 ```
 
+After running the analysis, you should expect output similar to:
+```
+Total Energy Usage:
+--------------------------------------------------------------------------------
+Period                    Total consumption (kWh)
+--------------------------------------------------------------------------------
+night                     330.932
+morning                   85.778
+afternoon                 68.868
+evening                   540.671
+--------------------------------------------------------------------------------
+Plan                      Cost reduction
+none                      0.00%
+night_only                6.45%
+day_only                  2.26%
+all_day                   7.00%
+```
+
+The above example shows that the All Day 7% discount plan is the best one for the analyzed consumption data.
+
 ### IEC
 IEC allow online access to power consumption data. Download it at https://iec.co.il/consumption-info-menu/remote-reading-info. This will be a CSV file with a funny name.
 
-Then run
+Then run:
 ```sh
 python3 analyze_iec.py path/to/your-iec-file.csv
 ```
@@ -25,7 +45,7 @@ python3 analyze_iec.py path/to/your-iec-file.csv
 ### Cellcom
 Cellcom do not provide their data online yet. You need to call them (*2266 or 0732989184) and ask for your data for a specific timeframe. Ask for as much as they have, and they will email you an XLSX file. [Find a way](https://csvkit.readthedocs.io/) to save it in CSV format.
 
-Then run
+Then run:
 ```sh
 python3 analyze_cellcom.py path/to/your-cellcom-file.csv
 ```

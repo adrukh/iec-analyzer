@@ -144,26 +144,59 @@ def analyze_energy_data(input_file):
         'afternoon': {'name': 'Afternoon (12:00-17:00)', 'hours': 5},
         'evening': {'name': 'Evening (17:00-23:00)', 'hours': 6}
     }
+
+    # plans offer discounts per period, 1 means no discount, .95 is 5%, etc.
+    plan_info = {
+        'none': {
+            'night': 1,
+            'morning': 1,
+            'afternoon': 1,
+            'evening': 1
+        },
+        'night_only': {
+            'night': .8,
+            'morning': 1,
+            'afternoon': 1,
+            'evening': 1
+        },
+        'day_only': {
+            'night': 1,
+            'morning': .85,
+            'afternoon': .85,
+            'evening': 1
+        },
+        'all_day': {
+            'night': .93,
+            'morning': .93,
+            'afternoon': .93,
+            'evening': .93
+        }
+    }
     
-    print("\nAverage Hourly Energy Usage by Day Period:")
+    print("\nTotal Energy Usage:")
     print("-" * 80)
-    print(f"{'Period':<25} {'Consumption (kWh/h)':<25} {'Production (kWh/h)':<25}")
+    print(f"{'Period':<25} {'Total consumption (kWh)':<25} {'Total production (kWh)':<25}")
     print("-" * 80)
+    total_consumption = 0
+    total_production = 0
     
     for period in ['night', 'morning', 'afternoon', 'evening']:
         data = period_data[period]
         info = period_info[period]
         
         if data['readings'] > 0:
-            # Calculate readings per hour (should be 4 for complete data)
-            readings_per_hour = data['readings'] / (info['hours'] * len(set(dt.date() for dt in fifteen_min_data.keys())))
-            
-            # Calculate hourly averages (multiply 15-min values by 4)
-            avg_consumption = (data['consumption'] / data['readings']) * 4
-            avg_production = (data['production'] / data['readings']) * 4
-            
-            print(f"{info['name']:<25} {avg_consumption:,.3f} kWh/h{' ':13} {avg_production:,.3f} kWh/h")
+            print(f"{info['name']:<25} {data['consumption']:,.3f} {' ':<20} {data['production']:,.3f}")
+            total_consumption += data['consumption']
+            total_production += data['production']
     
+    print("-" * 80)
+    print(f"{'Plan':<25} {'Cost reduction':<10}")
+    for plan in plan_info.keys():
+        plan_weighted_usage = 0
+        for period in ['night', 'morning', 'afternoon', 'evening']:
+            plan_weighted_usage += period_data[period]['consumption'] * plan_info[plan][period]
+        print(f"{plan:<25} {100 * (1 - plan_weighted_usage / total_consumption):,.2f}%")
+
     print("-" * 80)
     print(f"\nData summary:")
     print(f"- Total readings processed: {total_rows}")

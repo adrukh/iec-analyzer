@@ -51,21 +51,16 @@ def process_consumption_csv(file_path):
     
     return consumption_data
 
-def aggregate_consumption_by_parts_of_day(consumption_data):
-    """Aggregates consumption data by day and parts of the day."""
-    daily_consumption = {}
+def aggregate_usage_by_period(consumption_data):
+    """Aggregates consumption data by parts of the day."""
+    total_consumption = {"morning": 0.0, "afternoon": 0.0, "evening": 0.0, "night": 0.0}
     
     for timestamp, consumption in consumption_data:
         day = timestamp.date()
         part_of_day = determine_time_of_day(timestamp)
+        total_consumption[part_of_day] += consumption
         
-        if day not in daily_consumption:
-            daily_consumption[day] = {"morning": 0.0, "afternoon": 0.0, "evening": 0.0, "night": 0.0}
-        
-        if part_of_day:
-            daily_consumption[day][part_of_day] += consumption
-    
-    return daily_consumption
+    return total_consumption
 
 if __name__ == "__main__":
     if (len(sys.argv) < 2):
@@ -74,10 +69,51 @@ if __name__ == "__main__":
         input_file = sys.argv[1]
 
     print(f"Analyzing {input_file}")
-    consumption_data = process_consumption_csv(input_file)
-    daily_aggregates = aggregate_consumption_by_parts_of_day(consumption_data)
+    normalized_usage_data = process_consumption_csv(input_file)
+    period_data = aggregate_usage_by_period(normalized_usage_data)
     
-    for day, parts in daily_aggregates.items():
-        print(f"Date: {day}")
-        for part, total in parts.items():
-            print(f"  {part.capitalize()}: {total:.3f} kWh")
+    # plans offer discounts per period, 1 means no discount, .95 is 5%, etc.
+    plan_info = {
+        'none': {
+            'night': 1,
+            'morning': 1,
+            'afternoon': 1,
+            'evening': 1
+        },
+        'night_only': {
+            'night': .8,
+            'morning': 1,
+            'afternoon': 1,
+            'evening': 1
+        },
+        'day_only': {
+            'night': 1,
+            'morning': .85,
+            'afternoon': .85,
+            'evening': 1
+        },
+        'all_day': {
+            'night': .93,
+            'morning': .93,
+            'afternoon': .93,
+            'evening': .93
+        }
+    }
+    
+    print("\nTotal Energy Usage:")
+    print("-" * 80)
+    print(f"{'Period':<25} {'Total consumption (kWh)':<25}")
+    print("-" * 80)
+    total_consumption = 0
+    
+    for period in ['night', 'morning', 'afternoon', 'evening']:
+        print(f"{period:<25} {period_data[period]:,.3f}")
+        total_consumption += period_data[period]
+    
+    print("-" * 80)
+    print(f"{'Plan':<25} {'Cost reduction':<10}")
+    for plan in plan_info.keys():
+        plan_weighted_usage = 0
+        for period in ['night', 'morning', 'afternoon', 'evening']:
+            plan_weighted_usage += period_data[period] * plan_info[plan][period]
+        print(f"{plan:<25} {100 * (1 - plan_weighted_usage / total_consumption):,.2f}%")
