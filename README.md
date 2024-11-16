@@ -7,15 +7,18 @@ Israel is moving from old electricity power meters to new ones, which support ne
 ## Purpose
 The aim of this repo is to collaborate on tools that analyze the available power consumption data, and suggest the right discount plan for a household. It is currently available for households that have a new power meter installed, and are serviced by IEC or any other commercial utility provider.
 
-The data analysis will result in output similar to the below, helping you lower your electricity bill:
+After running the analysis, you should expect output similar to:
 ```
 --------------------------------------------------------------------------------
-Plan                      Cost reduction
+Plan                                     Overall cost reduction
 --------------------------------------------------------------------------------
-night_only                6.45%
-day_only                  2.26%
-all_day                   7.00%
+20% discount between 23:00 and 7:00      8.32%
+15% discount between 7:00 and 17:00      2.43%
+7% discount across the entire day        7.00%
+--------------------------------------------------------------------------------
 ```
+
+The above example shows that the 20% during night-time discount plan is the best one for the analyzed consumption data.
 
 ## Usage
 Start by cloning this repo. You will need python3 installed.

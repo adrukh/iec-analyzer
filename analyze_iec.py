@@ -1,4 +1,5 @@
 
+import settings
 import sys
 import csv
 from datetime import datetime, time
@@ -9,19 +10,6 @@ def parse_datetime(date_string, time_string):
         return datetime.strptime(f"{date_string} {time_string}", "%d/%m/%Y %H:%M")
     except ValueError as e:
         raise ValueError(f"Unable to parse date and time: {date_string} {time_string}") from e
-
-def determine_time_of_day(timestamp):
-    """Determines the time of day based on the timestamp."""
-    parts_of_day = {
-        "morning": (time(6, 0), time(11, 59)),
-        "afternoon": (time(12, 0), time(17, 59)),
-        "evening": (time(18, 0), time(23, 59)),
-        "night": (time(0, 0), time(5, 59)),
-    }
-    for part, (start, end) in parts_of_day.items():
-        if start <= timestamp.time() <= end:
-            return part
-    return None
 
 def process_consumption_csv(file_path):
     """Processes the consumption data from the new CSV format."""
@@ -53,12 +41,11 @@ def process_consumption_csv(file_path):
 
 def aggregate_usage_by_period(consumption_data):
     """Aggregates consumption data by parts of the day."""
-    total_consumption = {"morning": 0.0, "afternoon": 0.0, "evening": 0.0, "night": 0.0}
+    total_consumption = {period: 0 for period in settings.day_periods}
     
     for timestamp, consumption in consumption_data:
-        day = timestamp.date()
-        part_of_day = determine_time_of_day(timestamp)
-        total_consumption[part_of_day] += consumption
+        day_period = settings.get_day_period(timestamp)
+        total_consumption[day_period] += consumption
         
     return total_consumption
 
@@ -72,48 +59,21 @@ if __name__ == "__main__":
     normalized_usage_data = process_consumption_csv(input_file)
     period_data = aggregate_usage_by_period(normalized_usage_data)
     
-    # plans offer discounts per period, 1 means no discount, .95 is 5%, etc.
-    plan_info = {
-        'none': {
-            'night': 1,
-            'morning': 1,
-            'afternoon': 1,
-            'evening': 1
-        },
-        'night_only': {
-            'night': .8,
-            'morning': 1,
-            'afternoon': 1,
-            'evening': 1
-        },
-        'day_only': {
-            'night': 1,
-            'morning': .85,
-            'afternoon': .85,
-            'evening': 1
-        },
-        'all_day': {
-            'night': .93,
-            'morning': .93,
-            'afternoon': .93,
-            'evening': .93
-        }
-    }
-    
     print("\nTotal Energy Usage:")
     print("-" * 80)
     print(f"{'Period':<25} {'Total consumption (kWh)':<25}")
     print("-" * 80)
     total_consumption = 0
     
-    for period in ['night', 'morning', 'afternoon', 'evening']:
+    for period in settings.day_periods:
         print(f"{period:<25} {period_data[period]:,.3f}")
         total_consumption += period_data[period]
     
     print("-" * 80)
-    print(f"{'Plan':<25} {'Cost reduction':<10}")
-    for plan in plan_info.keys():
+    print(f"{'Plan':<40} {'Overall cost reduction':<10}")
+    print("-" * 80)
+    for plan in settings.plans.keys():
         plan_weighted_usage = 0
-        for period in ['night', 'morning', 'afternoon', 'evening']:
-            plan_weighted_usage += period_data[period] * plan_info[plan][period]
-        print(f"{plan:<25} {100 * (1 - plan_weighted_usage / total_consumption):,.2f}%")
+        for period in settings.day_periods:
+            plan_weighted_usage += period_data[period] * settings.plans[plan]['discounts'][period]
+        print(f"{settings.plans[plan]['details']:<40} {100 * (1 - plan_weighted_usage / total_consumption):,.2f}%")

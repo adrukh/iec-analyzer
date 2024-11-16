@@ -1,3 +1,4 @@
+import settings
 import sys
 import csv
 from datetime import datetime, time
@@ -30,27 +31,6 @@ def parse_date(date_string):
             continue
     
     raise ValueError(f"Unable to parse date string: {date_string}")
-
-def get_day_period(dt):
-    """
-    Determines which period of the day a datetime falls into.
-    
-    Parameters:
-    dt (datetime): The datetime to check
-    
-    Returns:
-    str: Period name ('night', 'morning', 'afternoon', or 'evening')
-    """
-    hour = dt.hour
-    
-    if 7 <= hour < 12:
-        return 'morning'
-    elif 12 <= hour < 17:
-        return 'afternoon'
-    elif 17 <= hour < 23:
-        return 'evening'
-    else:  # hour 23 or 0-6
-        return 'night'
 
 def analyze_energy_data(input_file):
     """
@@ -132,46 +112,10 @@ def analyze_energy_data(input_file):
         
         # Second pass: analyze deduplicated data by period
         for dt, values in fifteen_min_data.items():
-            period = get_day_period(dt)
+            period = settings.get_day_period(dt)
             period_data[period]['consumption'] += values['consumption']
             period_data[period]['production'] += values['production']
             period_data[period]['readings'] += 1
-    
-    # Calculate and print hourly averages for each period
-    period_info = {
-        'night': {'name': 'Night (23:00-07:00)', 'hours': 8},
-        'morning': {'name': 'Morning (07:00-12:00)', 'hours': 5},
-        'afternoon': {'name': 'Afternoon (12:00-17:00)', 'hours': 5},
-        'evening': {'name': 'Evening (17:00-23:00)', 'hours': 6}
-    }
-
-    # plans offer discounts per period, 1 means no discount, .95 is 5%, etc.
-    plan_info = {
-        'none': {
-            'night': 1,
-            'morning': 1,
-            'afternoon': 1,
-            'evening': 1
-        },
-        'night_only': {
-            'night': .8,
-            'morning': 1,
-            'afternoon': 1,
-            'evening': 1
-        },
-        'day_only': {
-            'night': 1,
-            'morning': .85,
-            'afternoon': .85,
-            'evening': 1
-        },
-        'all_day': {
-            'night': .93,
-            'morning': .93,
-            'afternoon': .93,
-            'evening': .93
-        }
-    }
     
     print("\nTotal Energy Usage:")
     print("-" * 80)
@@ -182,20 +126,20 @@ def analyze_energy_data(input_file):
     
     for period in ['night', 'morning', 'afternoon', 'evening']:
         data = period_data[period]
-        info = period_info[period]
         
         if data['readings'] > 0:
-            print(f"{info['name']:<25} {data['consumption']:,.3f} {' ':<20} {data['production']:,.3f}")
+            print(f"{period:<25} {data['consumption']:,.3f} {' ':<20} {data['production']:,.3f}")
             total_consumption += data['consumption']
             total_production += data['production']
     
     print("-" * 80)
-    print(f"{'Plan':<25} {'Cost reduction':<10}")
-    for plan in plan_info.keys():
+    print(f"{'Plan':<40} {'Overall cost reduction':<10}")
+    print("-" * 80)
+    for plan in settings.plans.keys():
         plan_weighted_usage = 0
-        for period in ['night', 'morning', 'afternoon', 'evening']:
-            plan_weighted_usage += period_data[period]['consumption'] * plan_info[plan][period]
-        print(f"{plan:<25} {100 * (1 - plan_weighted_usage / total_consumption):,.2f}%")
+        for period in settings.day_periods:
+            plan_weighted_usage += period_data[period]['consumption'] * settings.plans[plan]['discounts'][period]
+        print(f"{settings.plans[plan]['details']:<40} {100 * (1 - plan_weighted_usage / total_consumption):,.2f}%")
 
     print("-" * 80)
     print(f"\nData summary:")
