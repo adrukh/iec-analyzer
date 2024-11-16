@@ -124,7 +124,7 @@ def analyze_energy_data(input_file):
     total_consumption = 0
     total_production = 0
     
-    for period in ['night', 'morning', 'afternoon', 'evening']:
+    for period in settings.day_periods:
         data = period_data[period]
         
         if data['readings'] > 0:
