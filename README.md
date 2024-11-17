@@ -1,11 +1,11 @@
 # iec-analyzer
-Analyze power consumption and production data, provided by IEC and other utility providers in Israel
+Recommends the cheapest utility plan for your electricty bill in Israel.
 
 ## Background
 Israel is moving from old electricity power meters to new ones, which support near-real-time metering of the power consumed and produced by each household. Along this change, utility providers offer discounted rates for different times of day. This raises the question - given a specific power usage profile of a household, which program / discount plan is most economic for the household? As of now, the utility providers leave this exercise to the reader.
 
 ## Purpose
-The aim of this repo is to collaborate on tools that analyze the available power consumption data, and suggest the right discount plan for a household. It is currently available for households that have a new power meter installed, and are serviced by IEC or any other commercial utility provider.
+The aim of this repo is to provide tools that analyze the available power consumption data, and, given the available plan details, suggest the right discount plan for the lowest electricity bill. The analysis requires data obtained from new power meters, regardless of the chosen utility provider.
 
 After running the analysis, you should expect output similar to:
 ```
