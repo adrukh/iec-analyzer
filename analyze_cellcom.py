@@ -42,6 +42,7 @@ def analyze_energy_data(input_file):
     # Dictionary to store period data
     # Structure: {period: {'consumption': total, 'production': total, 'readings': number_of_15min_readings}}
     period_data = defaultdict(lambda: {'consumption': 0.0, 'production': 0.0, 'readings': 0})
+    month_data = defaultdict(lambda: {'consumption': 0.0, 'production': 0.0})
     
     # Read input file and process data
     with open(input_file, 'r', newline='') as csvfile:
@@ -110,28 +111,40 @@ def analyze_energy_data(input_file):
                 print(f"Warning: Unexpected error processing row: {row}. Error: {str(e)}")
                 continue
         
+        total_consumption = 0
+        total_production = 0
         # Second pass: analyze deduplicated data by period
         for dt, values in fifteen_min_data.items():
             period = settings.get_day_period(dt)
             period_data[period]['consumption'] += values['consumption']
             period_data[period]['production'] += values['production']
             period_data[period]['readings'] += 1
-    
-    print("\nTotal Energy Usage:")
+            month_data[dt.month]['consumption'] += values['consumption']
+            month_data[dt.month]['production'] += values['production']
+            total_consumption += values['consumption']
+            total_production += values['production']
+
+    print("\nEnergy Usage by Day Period:")
     print("-" * 80)
     print(f"{'Period':<25} {'Total consumption (kWh)':<25} {'Total production (kWh)':<25}")
     print("-" * 80)
-    total_consumption = 0
-    total_production = 0
     
     for period in settings.day_periods:
         data = period_data[period]
         
         if data['readings'] > 0:
             print(f"{period:<25} {data['consumption']:,.3f} {' ':<20} {data['production']:,.3f}")
-            total_consumption += data['consumption']
-            total_production += data['production']
     
+    print("\nEnergy Usage by Month:")
+    print("-" * 80)
+    print(f"{'Month':<25} {'Total consumption (kWh)':<25} {'Total production (kWh)':<25}")
+    print("-" * 80)
+    for month in range(1, 13):
+        data = month_data[month]
+        if data['consumption'] > 0:
+            print(f"{month:<25} {data['consumption']:,.3f} {' ':<20} {data['production']:,.3f}")
+
+    print("\nCalculated cost reduction by plan:")
     print("-" * 80)
     print(f"{'Plan':<40} {'Overall cost reduction':<10}")
     print("-" * 80)

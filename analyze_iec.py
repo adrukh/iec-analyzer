@@ -40,14 +40,18 @@ def process_consumption_csv(file_path):
     return consumption_data
 
 def aggregate_usage_by_period(consumption_data):
-    """Aggregates consumption data by parts of the day."""
-    total_consumption = {period: 0 for period in settings.day_periods}
+    """Aggregates consumption data"""
+    total_consumption = 0
+    period_consumption = {period: 0 for period in settings.day_periods}
+    month_consumption = {month: 0 for month in range(1, 13)}
     
     for timestamp, consumption in consumption_data:
         day_period = settings.get_day_period(timestamp)
-        total_consumption[day_period] += consumption
+        total_consumption += consumption
+        period_consumption[day_period] += consumption
+        month_consumption[timestamp.month] += consumption
         
-    return total_consumption
+    return total_consumption, period_consumption, month_consumption
 
 if __name__ == "__main__":
     if (len(sys.argv) < 2):
@@ -57,18 +61,24 @@ if __name__ == "__main__":
 
     print(f"Analyzing {input_file}")
     normalized_usage_data = process_consumption_csv(input_file)
-    period_data = aggregate_usage_by_period(normalized_usage_data)
+    total_consumption, period_data, month_data = aggregate_usage_by_period(normalized_usage_data)
     
-    print("\nTotal Energy Usage:")
+    print("\nEnergy Usage by Day Period:")
     print("-" * 80)
     print(f"{'Period':<25} {'Total consumption (kWh)':<25}")
     print("-" * 80)
-    total_consumption = 0
-    
     for period in settings.day_periods:
         print(f"{period:<25} {period_data[period]:,.3f}")
-        total_consumption += period_data[period]
     
+    print("\nEnergy Usage by Month:")
+    print("-" * 80)
+    print(f"{'Month':<25} {'Total consumption (kWh)':<25}")
+    print("-" * 80)
+    for month in range(1, 13):
+        if month_data[month] > 0:
+            print(f"{month:<25} {month_data[month]:,.3f}")
+
+    print("\nCalculated cost reduction by plan:")
     print("-" * 80)
     print(f"{'Plan':<40} {'Overall cost reduction':<10}")
     print("-" * 80)
